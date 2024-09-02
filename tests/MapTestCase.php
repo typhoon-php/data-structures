@@ -227,7 +227,7 @@ abstract class MapTestCase extends TestCase
 
         $this->expectExceptionObject($exception);
 
-        $map->getOr(1, static fn(): never => throw $exception);
+        $map->getOr(1, static function () use ($exception): void { throw $exception; });
     }
 
     final public function testOffsetGetThrowsIfKeyDoesNotExist(): void

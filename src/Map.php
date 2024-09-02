@@ -510,7 +510,7 @@ abstract class Map implements \IteratorAggregate, \Countable, \ArrayAccess
      */
     final public function offsetGet(mixed $offset): mixed
     {
-        return $this->getOr($offset, static fn(): never => throw new KeyIsNotDefined($offset));
+        return $this->getOr($offset, static function () use ($offset): void { throw new KeyIsNotDefined($offset); });
     }
 
     final public function offsetSet(mixed $offset, mixed $value): never

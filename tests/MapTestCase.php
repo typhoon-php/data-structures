@@ -405,7 +405,7 @@ abstract class MapTestCase extends TestCase
     {
         $map = static::createMap(['a']);
 
-        $value = $map->reduceKV(static fn(): never => self::fail());
+        $value = $map->reduceKV(static function (): void { self::fail(); });
 
         self::assertSame('a', $value);
     }
@@ -601,78 +601,70 @@ abstract class MapTestCase extends TestCase
         self::assertMapEquals(array_flip($values), $newMap);
     }
 
-    #[TestWith([[]])]
-    #[TestWith([[1]])]
-    #[TestWith([[1, 1, 1]])]
-    #[TestWith([[3, 2, 1, 4]])]
-    #[TestWith([['a', 'd', 'c']])]
-    #[TestWith([['c', 'a', 'a']])]
-    #[TestWith([['1', '2', '10', '20']])]
-    final public function testSort(array $values): void
+    #[TestWith([[], []])]
+    #[TestWith([[1], [1]])]
+    #[TestWith([[1, 1, 1], [1, 1, 1]])]
+    #[TestWith([[3, 2, 1, 4], [2 => 1, 1 => 2, 0 => 3, 3 => 4]])]
+    #[TestWith([['a', 'd', 'c'], ['a', 2 => 'c', 1 => 'd']])]
+    #[TestWith([['c', 'a', 'a'], [1 => 'a', 2 => 'a', 0 => 'c']])]
+    #[TestWith([['1', '2', '10', '20'], ['1', '2', '10', '20']])]
+    final public function testSort(array $values, array $expected): void
     {
         $map = static::createMap($values);
-        $sorted = $values;
-        asort($sorted);
 
         $newMap = $map->sort();
 
         self::assertNotSame($map, $newMap);
         self::assertMapEquals($values, $map);
-        self::assertMapEquals($sorted, $newMap);
+        self::assertMapEquals($expected, $newMap);
     }
 
-    #[TestWith([[]])]
-    #[TestWith([[1]])]
-    #[TestWith([[1, 1, 1]])]
-    #[TestWith([[3, 2, 1, 4]])]
-    #[TestWith([['a', 'd', 'c']])]
-    #[TestWith([['c', 'a', 'a']])]
-    #[TestWith([['1', '2', '10', '20']])]
-    final public function testSortDesc(array $values): void
+    #[TestWith([[], []])]
+    #[TestWith([[1], [1]])]
+    #[TestWith([[1, 1, 1], [1, 1, 1]])]
+    #[TestWith([[3, 2, 1, 4], [3 => 4, 0 => 3, 1 => 2, 2 => 1]])]
+    #[TestWith([['a', 'd', 'c'], [1 => 'd', 2 => 'c', 0 => 'a']])]
+    #[TestWith([['c', 'a', 'a'], ['c', 'a', 'a']])]
+    #[TestWith([['1', '2', '10', '20'], [3 => '20', 2 => '10', 1 => '2', 0 => '1']])]
+    final public function testSortDesc(array $values, array $expected): void
     {
         $map = static::createMap($values);
-        $sorted = $values;
-        arsort($sorted);
 
         $newMap = $map->sortDesc();
 
         self::assertNotSame($map, $newMap);
         self::assertMapEquals($values, $map);
-        self::assertMapEquals($sorted, $newMap);
+        self::assertMapEquals($expected, $newMap);
     }
 
-    #[TestWith([[]])]
-    #[TestWith([[1 => 'a', -2 => 'b', 10 => 'c']])]
-    #[TestWith([['a' => 1, 'aa' => 2, '0' => 3]])]
-    #[TestWith([['1' => 1, '10' => 2, '2' => 3, '20' => 4]])]
-    final public function testKsort(array $values): void
+    #[TestWith([[], []])]
+    #[TestWith([[1 => 'a', -2 => 'b', 10 => 'c'], [-2 => 'b', 1 => 'a', 10 => 'c']])]
+    #[TestWith([['a' => 1, 'aa' => 2, '0' => 3], [3, 'a' => 1, 'aa' => 2]])]
+    #[TestWith([['1' => 1, '10' => 2, '2' => 3, '20' => 4], [1 => 1, 2 => 3, 10 => 2, 20 => 4]])]
+    final public function testKsort(array $values, array $expected): void
     {
         $map = static::createMap($values);
-        $sorted = $values;
-        ksort($sorted);
 
         $newMap = $map->ksort();
 
         self::assertNotSame($map, $newMap);
         self::assertMapEquals($values, $map);
-        self::assertMapEquals($sorted, $newMap);
+        self::assertMapEquals($expected, $newMap);
     }
 
-    #[TestWith([[]])]
-    #[TestWith([[1 => 'a', -2 => 'b', 10 => 'c']])]
-    #[TestWith([['a' => 1, 'aa' => 2, '0' => 3]])]
-    #[TestWith([['1' => 1, '10' => 2, '2' => 3, '20' => 4]])]
-    final public function testKsortDesc(array $values): void
+    #[TestWith([[], []])]
+    #[TestWith([[1 => 'a', -2 => 'b', 10 => 'c'], [10 => 'c', 1 => 'a', -2 => 'b']])]
+    #[TestWith([['a' => 1, 'aa' => 2, '0' => 3], ['aa' => 2, 'a' => 1, 0 => 3]])]
+    #[TestWith([['1' => 1, '10' => 2, '2' => 3, '20' => 4], [20 => 4, 10 => 2, 2 => 3, 1 => 1]])]
+    final public function testKsortDesc(array $values, array $expected): void
     {
         $map = static::createMap($values);
-        $sorted = $values;
-        krsort($sorted);
 
         $newMap = $map->ksortDesc();
 
         self::assertNotSame($map, $newMap);
         self::assertMapEquals($values, $map);
-        self::assertMapEquals($sorted, $newMap);
+        self::assertMapEquals($expected, $newMap);
     }
 
     final public function testUsort(): void

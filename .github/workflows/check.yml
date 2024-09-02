@@ -41,7 +41,7 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        dependency-versions: [lowest, highest]
+        dependency-versions: [locked, lowest, highest]
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -53,14 +53,14 @@ jobs:
         with:
           composer-options: --optimize-autoloader
           dependency-versions: ${{ matrix.dependency-versions }}
-      - run: composer psalm -- --stats --output-format=github ${{ matrix.dependency-versions == 'lowest' && '--shepherd' || '' }}
+      - run: composer psalm -- --stats --output-format=github ${{ matrix.dependency-versions == 'locked' && '--shepherd' || '' }}
 
   test:
     runs-on: ubuntu-latest
     strategy:
       matrix:
         php: [8.1, 8.2, 8.3]
-        dependency-versions: [lowest, highest]
+        dependency-versions: [locked, lowest, highest]
     steps:
       - uses: actions/checkout@v4
       - uses: shivammathur/setup-php@v2
@@ -68,13 +68,13 @@ jobs:
           php-version: ${{ matrix.php }}
           ini-file: development
           tools: composer:v2
-          coverage: ${{ matrix.php == '8.1' && matrix.dependency-versions == 'lowest' && 'pcov' || '' }}
+          coverage: ${{ matrix.php == '8.1' && matrix.dependency-versions == 'locked' && 'pcov' || '' }}
       - uses: ramsey/composer-install@v3
         with:
           composer-options: --optimize-autoloader
           dependency-versions: ${{ matrix.dependency-versions }}
       - run: composer test -- --colors=always --coverage-clover coverage.xml
-      - if: ${{ matrix.php == '8.1' && matrix.dependency-versions == 'lowest' }}
+      - if: ${{ matrix.php == '8.1' && matrix.dependency-versions == 'locked' }}
         uses: codecov/codecov-action@v4
         env:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

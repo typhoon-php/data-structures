@@ -132,6 +132,14 @@ abstract class Map implements \IteratorAggregate, \Countable, \ArrayAccess
     abstract public function contains(mixed $key): bool;
 
     /**
+     * @return ($offset is K ? bool : false)
+     */
+    final public function offsetExists(mixed $offset): bool
+    {
+        return $this->contains($offset);
+    }
+
+    /**
      * @template D
      * @param D $default
      * @return ($key is K ? V|D : D)
@@ -147,6 +155,16 @@ abstract class Map implements \IteratorAggregate, \Countable, \ArrayAccess
      * @return ($key is K ? V|D : D)
      */
     abstract public function getOr(mixed $key, callable $or): mixed;
+
+    /**
+     * @return ($offset is K ? V : never)
+     * @psalm-suppress InvalidReturnType, NoValue
+     * @throws KeyIsNotDefined
+     */
+    final public function offsetGet(mixed $offset): mixed
+    {
+        return $this->getOr($offset, static function () use ($offset): void { throw new KeyIsNotDefined($offset); });
+    }
 
     /**
      * @return ?KVPair<K, V>
@@ -494,23 +512,6 @@ abstract class Map implements \IteratorAggregate, \Countable, \ArrayAccess
     public function toArray(): array
     {
         return iterator_to_array($this->getIterator());
-    }
-
-    /**
-     * @return ($offset is K ? bool : false)
-     */
-    final public function offsetExists(mixed $offset): bool
-    {
-        return $this->contains($offset);
-    }
-
-    /**
-     * @return ($offset is K ? V : never)
-     * @psalm-suppress InvalidReturnType, NoValue
-     */
-    final public function offsetGet(mixed $offset): mixed
-    {
-        return $this->getOr($offset, static function () use ($offset): void { throw new KeyIsNotDefined($offset); });
     }
 
     final public function offsetSet(mixed $offset, mixed $value): never

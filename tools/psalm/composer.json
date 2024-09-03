@@ -7,6 +7,11 @@
     "conflict": {
         "netresearch/jsonmapper": "<4"
     },
+    "autoload-dev": {
+        "psr-4": {
+            "Typhoon\\Tools\\Psalm\\": "src/"
+        }
+    },
     "config": {
         "platform": {
             "php": "8.1"

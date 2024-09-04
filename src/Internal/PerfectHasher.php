@@ -49,7 +49,7 @@ final class PerfectHasher
     private \Closure $defaultObjectHasher;
 
     /**
-     * @var array<non-empty-string, callable(object, self): non-empty-string>
+     * @var array<non-empty-string, \Closure(object, self): non-empty-string>
      */
     private array $objectHashers = [];
 
@@ -110,7 +110,7 @@ final class PerfectHasher
         }
 
         if (\is_object($value)) {
-            return $this->objectHashes[$value] ??= $this->hashObject($value);
+            return $this->objectHashes[$value] ??= $this->objectHasher($value::class)($value, $this);
         }
 
         if ($value === null) {
@@ -153,28 +153,27 @@ final class PerfectHasher
     }
 
     /**
-     * @return non-empty-string
+     * @param class-string $class
+     * @return \Closure(object, self): non-empty-string
      */
-    private function hashObject(object $object): string
+    private function objectHasher(string $class): \Closure
     {
-        $class = $object::class;
-
         if (isset($this->objectHashers[$class])) {
-            return $this->objectHashers[$class]($object, $this);
+            return $this->objectHashers[$class];
         }
 
         foreach (class_parents($class) as $parent) {
             if (isset($this->objectHashers[$parent])) {
-                return ($this->objectHashers[$class] = $this->objectHashers[$parent])($object, $this);
+                return $this->objectHashers[$class] = $this->objectHashers[$parent];
             }
         }
 
         foreach (class_implements($class) as $interface) {
             if (isset($this->objectHashers[$interface])) {
-                return ($this->objectHashers[$class] = $this->objectHashers[$interface])($object, $this);
+                return $this->objectHashers[$class] = $this->objectHashers[$interface];
             }
         }
 
-        return ($this->objectHashers[$class] = $this->defaultObjectHasher)($object);
+        return $this->objectHashers[$class] = $this->defaultObjectHasher;
     }
 }

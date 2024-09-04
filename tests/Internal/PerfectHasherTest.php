@@ -60,7 +60,7 @@ final class PerfectHasherTest extends TestCase
         self::assertSame('#' . spl_object_id($this), $hash);
     }
 
-    public function testObjectWithCustomEncoder(): void
+    public function testObjectWithCustomNormalizer(): void
     {
         $hasher = new PerfectHasher();
         $hasher->registerObjectNormalizer(\Throwable::class, static fn(\Throwable $exception): string => $exception->getMessage());
@@ -74,6 +74,41 @@ final class PerfectHasherTest extends TestCase
         self::assertSame('RangeException|UnexpectedValueException@`unexpected_value`', $hasher->hash(new \UnexpectedValueException('unexpected_value')));
     }
 
+    public function testObjectHashIsMemoizedForSameInstance(): void
+    {
+        $hasher = new PerfectHasher();
+        $hasher->registerObjectNormalizer(\stdClass::class, static function (): int {
+            static $hash = 0;
+
+            return $hash++;
+        });
+        $object = new \stdClass();
+
+        $hash1 = $hasher->hash($object);
+        $hash2 = $hasher->hash($object);
+
+        self::assertSame('stdClass@0', $hash1);
+        self::assertSame('stdClass@0', $hash2);
+    }
+
+    public function testMemoizedObjectHashIsNotSameForDifferentInstancesOfTheSameClass(): void
+    {
+        $hasher = new PerfectHasher();
+        $hasher->registerObjectNormalizer(\stdClass::class, static function (): int {
+            static $hash = 0;
+
+            return $hash++;
+        });
+        $object1 = new \stdClass();
+        $object2 = clone $object1;
+
+        $hash1 = $hasher->hash($object1);
+        $hash2 = $hasher->hash($object2);
+
+        self::assertSame('stdClass@0', $hash1);
+        self::assertSame('stdClass@1', $hash2);
+    }
+
     /**
      * @param non-empty-string $prefix
      */
@@ -81,7 +116,7 @@ final class PerfectHasherTest extends TestCase
     #[TestWith([self::class])]
     #[TestWith(['123'])]
     #[TestWith(['a.b.c'])]
-    public function testRegisterObjectEncoderAcceptsValidPrefix(string $prefix): void
+    public function testRegisterObjectNormalizerAcceptsValidPrefix(string $prefix): void
     {
         $hasher = new PerfectHasher();
 
@@ -98,7 +133,7 @@ final class PerfectHasherTest extends TestCase
     #[TestWith(['#'])]
     #[TestWith(['@'])]
     #[TestWith([','])]
-    public function testRegisterObjectEncoderThrowsOnInvalidPrefix(string $prefix): void
+    public function testRegisterObjectNormalizerThrowsOnInvalidPrefix(string $prefix): void
     {
         $hasher = new PerfectHasher();
 
@@ -107,7 +142,7 @@ final class PerfectHasherTest extends TestCase
         $hasher->registerObjectNormalizer(self::class, static fn(): bool => true, $prefix);
     }
 
-    public function testRegisterObjectEncoderThrowsAfterEncoding(): void
+    public function testRegisterObjectNormalizerThrowsAfterHashing(): void
     {
         $hasher = new PerfectHasher();
         $hasher->hash(1);

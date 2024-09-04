@@ -7,6 +7,7 @@ namespace Typhoon\DataStructures\Internal;
 use Typhoon\DataStructures\KVPair;
 
 /**
+ * @see https://en.wikipedia.org/wiki/Perfect_hash_function
  * @internal
  * @psalm-internal Typhoon\DataStructures
  */

@@ -78,6 +78,7 @@ final class PerfectHasherTest extends TestCase
     {
         $hasher = new PerfectHasher();
         $hasher->registerObjectNormalizer(\stdClass::class, static function (): int {
+            /** @var int */
             static $hash = 0;
 
             return $hash++;
@@ -95,6 +96,7 @@ final class PerfectHasherTest extends TestCase
     {
         $hasher = new PerfectHasher();
         $hasher->registerObjectNormalizer(\stdClass::class, static function (): int {
+            /** @var int */
             static $hash = 0;
 
             return $hash++;

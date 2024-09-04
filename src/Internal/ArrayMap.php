@@ -26,20 +26,20 @@ final class ArrayMap extends MutableMap
     public function with(mixed $key, mixed $value): static
     {
         $map = clone $this;
-        $map->kvPairs[UniqueHasher::global()->hash($key)] = new KVPair($key, $value);
+        $map->kvPairs[PerfectHasher::global()->hash($key)] = new KVPair($key, $value);
 
         return $map;
     }
 
     public function put(mixed $key, mixed $value): void
     {
-        $this->kvPairs[UniqueHasher::global()->hash($key)] = new KVPair($key, $value);
+        $this->kvPairs[PerfectHasher::global()->hash($key)] = new KVPair($key, $value);
     }
 
     public function putPairs(KVPair ...$kvPairs): void
     {
         foreach ($kvPairs as $kvPair) {
-            $this->kvPairs[UniqueHasher::global()->hash($kvPair->key)] = $kvPair;
+            $this->kvPairs[PerfectHasher::global()->hash($kvPair->key)] = $kvPair;
         }
     }
 
@@ -52,14 +52,14 @@ final class ArrayMap extends MutableMap
         }
 
         foreach ($values as $key => $value) {
-            $this->kvPairs[UniqueHasher::global()->hash($key)] = new KVPair($key, $value);
+            $this->kvPairs[PerfectHasher::global()->hash($key)] = new KVPair($key, $value);
         }
     }
 
     public function remove(mixed ...$keys): void
     {
         foreach ($keys as $key) {
-            unset($this->kvPairs[UniqueHasher::global()->hash($key)]);
+            unset($this->kvPairs[PerfectHasher::global()->hash($key)]);
         }
     }
 
@@ -80,12 +80,12 @@ final class ArrayMap extends MutableMap
 
     public function contains(mixed $key): bool
     {
-        return isset($this->kvPairs[UniqueHasher::global()->hash($key)]);
+        return isset($this->kvPairs[PerfectHasher::global()->hash($key)]);
     }
 
     public function getOr(mixed $key, callable $or): mixed
     {
-        $hash = UniqueHasher::global()->hash($key);
+        $hash = PerfectHasher::global()->hash($key);
 
         if (isset($this->kvPairs[$hash])) {
             return $this->kvPairs[$hash]->value;
@@ -251,7 +251,7 @@ final class ArrayMap extends MutableMap
     public function __unserialize(array $kvPairs): void
     {
         foreach ($kvPairs as $kvPair) {
-            $this->kvPairs[UniqueHasher::global()->hash($kvPair->key)] = $kvPair;
+            $this->kvPairs[PerfectHasher::global()->hash($kvPair->key)] = $kvPair;
         }
     }
 }

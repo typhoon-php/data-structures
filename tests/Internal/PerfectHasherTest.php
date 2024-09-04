@@ -9,8 +9,8 @@ use PHPUnit\Framework\Attributes\TestWith;
 use PHPUnit\Framework\TestCase;
 use Typhoon\DataStructures\KVPair;
 
-#[CoversClass(UniqueHasher::class)]
-final class UniqueHasherTest extends TestCase
+#[CoversClass(PerfectHasher::class)]
+final class PerfectHasherTest extends TestCase
 {
     #[TestWith([null, 'n'])]
     #[TestWith([true, 't'])]
@@ -32,7 +32,7 @@ final class UniqueHasherTest extends TestCase
     #[TestWith([['a' => 'b'], '[`a`:`b`,]'])]
     public function testSimpleValues(mixed $value, int|string $expected): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
         $hash = $hasher->hash($value);
 
         self::assertSame($expected, $hash);
@@ -46,7 +46,7 @@ final class UniqueHasherTest extends TestCase
     #[TestWith([STDERR])]
     public function testResource(mixed $resource): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
         $hash = $hasher->hash($resource);
 
         self::assertSame('r' . get_resource_id($resource), $hash);
@@ -54,7 +54,7 @@ final class UniqueHasherTest extends TestCase
 
     public function testObject(): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
         $hash = $hasher->hash($this);
 
         self::assertSame('#' . spl_object_id($this), $hash);
@@ -62,10 +62,10 @@ final class UniqueHasherTest extends TestCase
 
     public function testObjectWithCustomEncoder(): void
     {
-        $hasher = new UniqueHasher();
-        $hasher->registerObjectHasher(\Throwable::class, static fn(\Throwable $exception): string => $exception->getMessage());
-        $hasher->registerObjectHasher(\RuntimeException::class, static fn(\RuntimeException $exception): string => $exception->getMessage());
-        $hasher->registerObjectHasher([\RangeException::class, \UnexpectedValueException::class], static fn(\RangeException|\UnexpectedValueException $exception): string => $exception->getMessage());
+        $hasher = new PerfectHasher();
+        $hasher->registerObjectNormalizer(\Throwable::class, static fn(\Throwable $exception): string => $exception->getMessage());
+        $hasher->registerObjectNormalizer(\RuntimeException::class, static fn(\RuntimeException $exception): string => $exception->getMessage());
+        $hasher->registerObjectNormalizer([\RangeException::class, \UnexpectedValueException::class], static fn(\RangeException|\UnexpectedValueException $exception): string => $exception->getMessage());
 
         self::assertSame('Throwable@`logic`', $hasher->hash(new \LogicException('logic')));
         self::assertSame('RuntimeException@`runtime`', $hasher->hash(new \RuntimeException('runtime')));
@@ -83,9 +83,9 @@ final class UniqueHasherTest extends TestCase
     #[TestWith(['a.b.c'])]
     public function testRegisterObjectEncoderAcceptsValidPrefix(string $prefix): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
 
-        $hasher->registerObjectHasher(self::class, static fn(): bool => true, $prefix);
+        $hasher->registerObjectNormalizer(self::class, static fn(): bool => true, $prefix);
 
         self::expectNotToPerformAssertions();
     }
@@ -100,27 +100,27 @@ final class UniqueHasherTest extends TestCase
     #[TestWith([','])]
     public function testRegisterObjectEncoderThrowsOnInvalidPrefix(string $prefix): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
 
         $this->expectExceptionObject(new \InvalidArgumentException(\sprintf('Invalid prefix "%s"', $prefix)));
 
-        $hasher->registerObjectHasher(self::class, static fn(): bool => true, $prefix);
+        $hasher->registerObjectNormalizer(self::class, static fn(): bool => true, $prefix);
     }
 
     public function testRegisterObjectEncoderThrowsAfterEncoding(): void
     {
-        $hasher = new UniqueHasher();
+        $hasher = new PerfectHasher();
         $hasher->hash(1);
 
         $this->expectExceptionObject(new \LogicException('Please register object hashers before using data structures'));
 
-        $hasher->registerObjectHasher(self::class, static fn(): bool => true);
+        $hasher->registerObjectNormalizer(self::class, static fn(): bool => true);
     }
 
     public function testGlobalReturnsSameInstance(): void
     {
-        $hasher = UniqueHasher::global();
-        $hasher2 = UniqueHasher::global();
+        $hasher = PerfectHasher::global();
+        $hasher2 = PerfectHasher::global();
 
         self::assertSame($hasher, $hasher2);
     }
@@ -130,7 +130,7 @@ final class UniqueHasherTest extends TestCase
         $object = new \stdClass();
         $object->foo = 'bar';
 
-        $hash = UniqueHasher::global()->hash($object);
+        $hash = PerfectHasher::global()->hash($object);
 
         self::assertSame('stdClass@[`foo`:`bar`,]', $hash);
     }
@@ -139,7 +139,7 @@ final class UniqueHasherTest extends TestCase
     {
         $kv = new KVPair('key', 'value');
 
-        $hash = UniqueHasher::global()->hash($kv);
+        $hash = PerfectHasher::global()->hash($kv);
 
         self::assertSame('Typhoon\DataStructures\KVPair@[`key`,`value`,]', $hash);
     }
@@ -149,7 +149,7 @@ final class UniqueHasherTest extends TestCase
     #[TestWith([new \DateTimeImmutable('2020-04-06 01:02:03.671881 +3:30'), 'DateTimeInterface@`20200406010203671881+03:30`'])]
     public function testGlobalHashesDateTime(\DateTimeInterface $date, string $expected): void
     {
-        $hash = UniqueHasher::global()->hash($date);
+        $hash = PerfectHasher::global()->hash($date);
 
         self::assertSame($expected, $hash);
     }

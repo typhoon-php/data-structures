@@ -10,7 +10,7 @@ use Typhoon\DataStructures\KVPair;
  * @internal
  * @psalm-internal Typhoon\DataStructures
  */
-final class UniqueHasher
+final class PerfectHasher
 {
     private const NULL = 'n';
     private const TRUE = 't';
@@ -34,9 +34,9 @@ final class UniqueHasher
         }
 
         $default = new self();
-        $default->registerObjectHasher(\stdClass::class, static fn(\stdClass $object): array => (array) $object);
-        $default->registerObjectHasher(\DateTimeInterface::class, static fn(\DateTimeInterface $object): string => $object->format('YmdHisue'));
-        $default->registerObjectHasher(KVPair::class, static fn(KVPair $object): array => [$object->key, $object->value]);
+        $default->registerObjectNormalizer(\stdClass::class, static fn(\stdClass $object): array => (array) $object);
+        $default->registerObjectNormalizer(\DateTimeInterface::class, static fn(\DateTimeInterface $object): string => $object->format('YmdHisue'));
+        $default->registerObjectNormalizer(KVPair::class, static fn(KVPair $object): array => [$object->key, $object->value]);
 
         return self::$global = $default;
     }
@@ -68,10 +68,10 @@ final class UniqueHasher
     /**
      * @template TObject of object
      * @param class-string<TObject>|array<class-string<TObject>> $classes
-     * @param callable(TObject): mixed $hasher
+     * @param callable(TObject): mixed $normalizer
      * @param ?non-empty-string $prefix
      */
-    public function registerObjectHasher(string|array $classes, callable $hasher, ?string $prefix = null): void
+    public function registerObjectNormalizer(string|array $classes, callable $normalizer, ?string $prefix = null): void
     {
         if ($this->locked) {
             throw new \LogicException('Please register object hashers before using data structures');
@@ -86,7 +86,7 @@ final class UniqueHasher
 
         $objectHasher =
             /** @param TObject $object */
-            static fn(object $object, self $mainHasher): string => $prefix . self::OBJECT_DATA_PREFIX . $mainHasher->hash($hasher($object));
+            static fn(object $object, self $hasher): string => $prefix . self::OBJECT_DATA_PREFIX . $hasher->hash($normalizer($object));
 
         foreach ($classes as $class) {
             /** @psalm-suppress InvalidPropertyAssignmentValue */

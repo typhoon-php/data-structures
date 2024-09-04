@@ -4,16 +4,16 @@ declare(strict_types=1);
 
 namespace Typhoon\DataStructures;
 
-use Typhoon\DataStructures\Internal\UniqueHasher;
+use Typhoon\DataStructures\Internal\PerfectHasher;
 
 /**
  * @api
  * @template TObject of object
  * @param class-string<TObject>|array<class-string<TObject>> $classes
  * @param ?non-empty-string $prefix
- * @param callable(TObject): mixed $hasher
+ * @param callable(TObject): mixed $normalizer
  */
-function registerObjectHasher(string|array $classes, callable $hasher, ?string $prefix = null): void
+function registerObjectNormalizer(string|array $classes, callable $normalizer, ?string $prefix = null): void
 {
-    UniqueHasher::global()->registerObjectHasher($classes, $hasher, $prefix);
+    PerfectHasher::global()->registerObjectNormalizer($classes, $normalizer, $prefix);
 }

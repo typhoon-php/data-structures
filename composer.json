@@ -60,6 +60,11 @@
     "scripts": {
         "post-install-cmd": "@install-tools",
         "post-update-cmd": "@install-tools",
+        "bump-dev": [
+            "@composer bump --dev-only",
+            "@composer bump --dev-only --working-dir=tools/composer-require-checker",
+            "@composer bump --dev-only --working-dir=tools/psalm"
+        ],
         "check-require": "tools/composer-require-checker/vendor/bin/composer-require-checker",
         "fixcs": "php-cs-fixer fix --diff",
         "infection": "infection --show-mutations",

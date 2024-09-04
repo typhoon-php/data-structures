@@ -80,6 +80,5 @@
         <function name="print"/>
         <function name="sleep"/>
         <function name="usleep"/>
-        <function name="var_dump"/>
     </forbiddenFunctions>
 </psalm>

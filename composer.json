@@ -54,25 +54,19 @@
     "extra": {
         "bamarni-bin": {
             "bin-links": false,
-            "forward-command": false,
+            "forward-command": true,
             "target-directory": "tools"
         }
     },
     "scripts": {
-        "post-install-cmd": "@install-tools",
-        "post-update-cmd": "@install-tools",
         "bump-dev": [
             "@composer bump --dev-only",
-            "@composer bump --dev-only --working-dir=tools/composer-require-checker",
-            "@composer bump --dev-only --working-dir=tools/psalm"
+            "@composer bin all bump --dev-only"
         ],
         "check-require": "tools/composer-require-checker/vendor/bin/composer-require-checker",
+        "check-unused": "tools/composer-unused/vendor/bin/composer-unused",
         "fixcs": "php-cs-fixer fix --diff",
         "infection": "infection --show-mutations",
-        "install-tools": [
-            "@composer bin psalm install",
-            "@composer bin composer-require-checker install"
-        ],
         "pre-command-run": "mkdir -p var",
         "psalm": "tools/psalm/vendor/bin/psalm --show-info --no-diff --no-cache",
         "test": "phpunit"

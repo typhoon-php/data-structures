@@ -21,14 +21,6 @@ $config = (new Config())
 
 (new PhpCsFixerCodingStandard())->applyTo($config, [
     'final_public_method_for_abstract_class' => false,
-    'ordered_class_elements' => ['order' => ['use_trait']],
-    'class_attributes_separation' => ['elements' => [
-        'trait_import' => 'only_if_meta',
-        'const' => 'only_if_meta',
-        'case' => 'only_if_meta',
-        'property' => 'one',
-        'method' => 'one',
-    ]],
 ]);
 
 return $config;

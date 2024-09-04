@@ -53,9 +53,16 @@ final class UniqueHasher
      */
     private array $objectHashers = [];
 
+    /**
+     * @var \WeakMap<object, non-empty-string>
+     */
+    private \WeakMap $objectHashes;
+
     public function __construct()
     {
         $this->defaultObjectHasher = static fn(object $object): string => self::OBJECT_ID_PREFIX . spl_object_id($object);
+        /** @var \WeakMap<object, non-empty-string> */
+        $this->objectHashes = new \WeakMap();
     }
 
     /**
@@ -103,25 +110,7 @@ final class UniqueHasher
         }
 
         if (\is_object($value)) {
-            $class = $value::class;
-
-            if (isset($this->objectHashers[$class])) {
-                return $this->objectHashers[$class]($value, $this);
-            }
-
-            foreach (class_parents($class) as $parent) {
-                if (isset($this->objectHashers[$parent])) {
-                    return ($this->objectHashers[$class] = $this->objectHashers[$parent])($value, $this);
-                }
-            }
-
-            foreach (class_implements($class) as $interface) {
-                if (isset($this->objectHashers[$interface])) {
-                    return ($this->objectHashers[$class] = $this->objectHashers[$interface])($value, $this);
-                }
-            }
-
-            return ($this->objectHashers[$class] = $this->defaultObjectHasher)($value);
+            return $this->objectHashes[$value] ??= $this->hashObject($value);
         }
 
         if ($value === null) {
@@ -161,5 +150,31 @@ final class UniqueHasher
         }
 
         throw new \LogicException(\sprintf('Type %s is not supported', get_debug_type($value)));
+    }
+
+    /**
+     * @return non-empty-string
+     */
+    private function hashObject(object $object): string
+    {
+        $class = $object::class;
+
+        if (isset($this->objectHashers[$class])) {
+            return $this->objectHashers[$class]($object, $this);
+        }
+
+        foreach (class_parents($class) as $parent) {
+            if (isset($this->objectHashers[$parent])) {
+                return ($this->objectHashers[$class] = $this->objectHashers[$parent])($object, $this);
+            }
+        }
+
+        foreach (class_implements($class) as $interface) {
+            if (isset($this->objectHashers[$interface])) {
+                return ($this->objectHashers[$class] = $this->objectHashers[$interface])($object, $this);
+            }
+        }
+
+        return ($this->objectHashers[$class] = $this->defaultObjectHasher)($object);
     }
 }
